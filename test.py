@@ -7,8 +7,8 @@ base.cam.setPos(0, -2, 0.4)
 base.cam.lookAt(0, 0, 0.4)
 
 import simplepbr
-# pipeline = simplepbr.init()
-# pipeline.enable_shadows=True
+pipeline = simplepbr.init()
+pipeline.enable_shadows=True
 
 from panda3d.core import AmbientLight
 
@@ -47,41 +47,57 @@ base.taskMgr.add(lighting,'lighting')
 from panda3d.bullet import BulletWorld,BulletDebugNode
 bullet_world = BulletWorld()
 bullet_world.setGravity(Vec3(0, 0, -9.81))
+def do_physics(task):
+    from direct.showbase.ShowBaseGlobal import globalClock
+    dt = globalClock.get_dt()
+    bullet_world.doPhysics(dt,10, 1/180)
+    return task.cont
+base.task_mgr.add(do_physics, 'package')
 
 debug = BulletDebugNode('Debug')
 debug_np = base.render.attachNewNode(debug)
 debug_np.show()
-debug.showWireframe(False)
+debug.showWireframe(True)
 debug.showConstraints(False)
 debug.showBoundingBoxes(False)
-debug.showNormals(True)
+debug.showNormals(False)
 bullet_world.setDebugNode(debug)
 
 from models.floor.floor import Floor
 floor_np = Floor(base).make(bullet_world)
+floor_np.setPos(0,0,-0.001)
 
 from models.converyor.converyor import Converyor
 converyor_np = Converyor(base).make(bullet_world)
 
 from models.camera.camera import Camera
 camera_np = Camera(base).make()
-camera_np.setPos(0.488625,-0.626974,0)
+camera_np.setPos(0.497927,0,0)
 
 from models.box.box import Box
 box_np = Box(base).make(bullet_world)
-box_np.setPos(-0.649572,-0.49388,0)
+box_np.setPos(-0.649572,-0.348722,0)
 
 from models.robot.robot import Robot
 robot = Robot(base,bullet_world)
 robot_np = robot.node_path()
-robot_np.set_pos(-0.529451,0.325756,0)
+robot_np.set_pos(-0.522699,0.261616,0)
 
 cube_np = base.loader.loadModel("models/cube/cube.bam")
 cube_np.set_depth_offset(-1)
 
+from copy import deepcopy
+model = deepcopy(cube_np)
+model.reparentTo(base.render)
+package_np = model.find('**/Cube/+BulletRigidBodyNode')
+package_np.setPos(0.02,0.261616,0.5)
+package = package_np.node()
+package.set_mass(1)
+package.set_friction(1)
+bullet_world.attachRigidBody(package)
+
 packages = list()
 def package(task):
-    from copy import deepcopy
     import random
 
     model = deepcopy(cube_np)
@@ -94,18 +110,26 @@ def package(task):
     package.apply_central_impulse(Vec3(0,0.001 * 0.051,0))
     bullet_world.attachRigidBody(package)
 
-    robot.pick(packages[0].getPos())
-
-    from direct.showbase.ShowBaseGlobal import globalClock
-    dt = globalClock.getDt()
-    bullet_world.doPhysics(dt, 5, 1.0/180.0)
+    # robot.pick(packages[0].getPos())
     return task.again
 
-base.task_mgr.do_method_later(1,package, 'package')
+# base.task_mgr.do_method_later(1,package, 'package')
 
-
-base.accept('q',lambda: robot.joint2_degrees(-40))
-base.accept('e',lambda: robot.joint2_degrees(40))
-
+base.accept('1',lambda: robot.joint1_degrees(robot.joint1.get_hinge_angle() + -5))
+base.accept('q',lambda: robot.joint1_degrees(robot.joint1.get_hinge_angle() + 5))
+base.accept('2',lambda: robot.joint2_degrees(robot.joint2.get_hinge_angle() + -5))
+base.accept('w',lambda: robot.joint2_degrees(robot.joint2.get_hinge_angle() + 5))
+base.accept('3',lambda: robot.joint3_degrees(robot.joint3.get_hinge_angle() + -5))
+base.accept('e',lambda: robot.joint3_degrees(robot.joint3.get_hinge_angle() + 5))
+base.accept('4',lambda: robot.joint4_degrees(robot.joint4.get_hinge_angle() + -5))
+base.accept('r',lambda: robot.joint4_degrees(robot.joint4.get_hinge_angle() + 5))
+base.accept('5',lambda: robot.joint5_degrees(robot.joint5.get_hinge_angle() + -5))
+base.accept('t',lambda: robot.joint5_degrees(robot.joint5.get_hinge_angle() + 5))
+base.accept('6',lambda: robot.joint6_degrees(robot.joint6.get_hinge_angle() + -5))
+base.accept('y',lambda: robot.joint6_degrees(robot.joint6.get_hinge_angle() + 5))
+base.accept('7',lambda: robot.joint7_degrees(robot.joint7.get_hinge_angle() + -5))
+base.accept('u',lambda: robot.joint7_degrees(robot.joint7.get_hinge_angle() + 5))
+base.accept('g',lambda: robot.joint_fingers(True))
+base.accept('p',lambda: robot.joint_fingers(False))
 
 base.run()
