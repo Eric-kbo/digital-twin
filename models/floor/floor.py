@@ -3,16 +3,17 @@ from panda3d.bullet import BulletWorld
 
 class Floor():
     def __init__(self,base:ShowBase):
-        self.floor_np = floor_np = base.loader.loadModel('models/floor/collision/floor.bam').find('**/+BulletRigidBodyNode')
-        floor_np.reparent_to(base.render)
-        
+        self.collision_np = collision_np = base.loader.loadModel('models/floor/collision/floor.bam').find('**/+BulletRigidBodyNode')
+        collision_np.reparent_to(base.render)
+        collision_np.node().removeAllChildren()
+
         model = base.loader.loadModel('models/floor/floor.bam')
-        model.reparent_to(floor_np)
+        model.reparent_to(collision_np)
+        model.setDepthOffset(-1)
         pass
 
     def make(self,bullet_world:BulletWorld):
-        floor = self.floor_np.node()
-        floor.setMass(0)
-        
-        bullet_world.attach_rigid_body(floor)
-        return self.floor_np
+        collision = self.collision_np.node()
+        collision.setMass(0)
+        bullet_world.attach_rigid_body(collision)
+        return self.collision_np
