@@ -192,7 +192,7 @@ class Robot():
 
         self.joint7 = hinge = BulletHingeConstraint(link6, link7, pivotA, pivotB, axisA, axisB, True)
         self.joint7_limit = (-170, 170)
-        hinge.set_limit(0,0)
+        hinge.set_limit(180,180)
         hinge.enableAngularMotor(True,0,12)
         bullet_world.attachConstraint(hinge)
 
@@ -229,7 +229,6 @@ class Robot():
         finger.setDeactivationEnabled(True)
         finger.set_friction(1)
         finger.set_anisotropic_friction(1)
-        finger.set_linear_damping(1)
         finger.setInertia(Vec3(0.1,0.1,0.1))
         bullet_world.attachRigidBody(finger)
 
@@ -262,7 +261,6 @@ class Robot():
         finger.setDeactivationEnabled(True)
         finger.set_friction(1)
         finger.set_anisotropic_friction(1)
-        finger.set_linear_damping(1)
         finger.setInertia(Vec3(0.1,0.1,0.1))
         bullet_world.attachRigidBody(finger)
 
@@ -376,17 +374,18 @@ class Robot():
         res2 = self.bullet_world.contact_test_pair(self.finger_right_np.node(),stuff)
         if not res2.get_num_contacts():
             return task.again
-
+            
         self.stuff_np = self.base.render.find_path_to(stuff)
-        pivotA = Point3(0, 0, 0.105) + (self.target_np.get_pos() - self.stuff_np.get_pos())
+        pivotA = Point3(0, 0, 0.105) - (self.stuff_np.get_pos() - self.target_np.get_pos())
         pivotB = Point3(0, 0, 0)
-        axisA =  Vec3(0, 0, -1)
+
+        axisA = -self.hand_np.get_quat().get_up()
         axisB = Vec3(0, 0, 1)
         
+        self.joint_finger_left.setTargetLinearMotorVelocity(0.0)
+        self.joint_finger_right.setTargetLinearMotorVelocity(0.0)
         self.joint_target = BulletHingeConstraint(self.hand_np.node(),stuff, pivotA, pivotB,axisA, axisB, True)
-        stuff.set_linear_damping(1)
-        stuff.set_angular_damping(1)
-        self.joint_target.enableAngularMotor(True,0,87)
+        self.joint_target.setLimit(0,0)
         self.bullet_world.attach_constraint(self.joint_target)
         return task.done
 
@@ -400,7 +399,5 @@ class Robot():
                 self.base.task_mgr.do_method_later(0,self.contacting,'contacting')
         else:
             if self.joint_target: 
-                self.stuff_np.node().set_linear_damping(0)
-                self.stuff_np.node().set_angular_damping(0)
                 self.bullet_world.remove_constraint(self.joint_target)
                 self.joint_target = None

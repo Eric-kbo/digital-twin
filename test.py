@@ -91,6 +91,7 @@ model = deepcopy(cube_np)
 model.reparentTo(base.render)
 package_np = model.find('**/Cube/+BulletRigidBodyNode')
 package_np.setPos(0.02,0.261616,0.5)
+package_np.setHpr(0,0,180)
 package = package_np.node()
 package.set_mass(1)
 package.set_friction(1)
@@ -131,5 +132,6 @@ base.accept('7',lambda: robot.joint7_degrees(robot.joint7.get_hinge_angle() + -5
 base.accept('u',lambda: robot.joint7_degrees(robot.joint7.get_hinge_angle() + 5))
 base.accept('g',lambda: robot.joint_fingers(True))
 base.accept('p',lambda: robot.joint_fingers(False))
+
 
 base.run()
