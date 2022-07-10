@@ -1,210 +1,138 @@
-from inspect import stack
-from random import random
-from xml.etree.ElementTree import QName, tostring
-from cv2 import INTER_MAX
-from direct.showbase.InputStateGlobal import inputState
+from panda3d.core import Vec3,Vec4
+
 from direct.showbase.ShowBase import ShowBase
-from direct.task import Task
-from direct.actor.Actor import Actor
-from panda3d.core import *
-from panda3d.bullet import *
+base = ShowBase()
+
+base.cam.setPos(0, -2, 0.4)
+base.cam.lookAt(0, 0, 0.4)
+
 import simplepbr
+pipeline = simplepbr.init()
+pipeline.enable_shadows=True
 
-class Application(ShowBase):
-    def __init__(self):
-        ShowBase.__init__(self)        
-        pipeline = simplepbr.init()
-        pipeline.enable_shadows=True
+from panda3d.core import AmbientLight
 
-        light = DirectionalLight('dlight')
-        light.setColor((1, 1, 1, 1))
+alight = AmbientLight('ambientLight')
+alight.set_color(Vec4(0.4, 0.4, 0.4, 1))
+alight_np = base.render.attach_new_node(alight)
+base.render.setLight(alight_np)
 
-        self.lnp = self.render.attachNewNode(light)
-        self.lnp.setPos(0,-5,5)
-        self.lnp.lookAt(0,0,0)
-        self.render.setLight(self.lnp)
-        # self.render.setShaderAuto()
+from panda3d.core import DirectionalLight
 
-        alight = AmbientLight('alight')
-        alight.setColor((0.2, 0.2, 0.2, 1))
-        alnp = self.render.attachNewNode(alight)
-        self.render.setLight(alnp)
-               
-        self.debugNP = self.render.attachNewNode(BulletDebugNode('Debug'))
-        self.debugNP.show()
-        self.debugNP.node().showWireframe(True)
-        self.debugNP.node().showConstraints(True)
-        self.debugNP.node().showBoundingBoxes(False)
-        self.debugNP.node().showNormals(True)
+dlight = DirectionalLight('directionalLight')
+dlight.set_color(Vec4(0.7, 0.7, 0.7, 1))
+dlight.setShadowCaster(True,1024,1024)
+lens = dlight.getLens()
+lens.setFilmSize(3,3)
 
-        self.world = BulletWorld()
-        self.world.setGravity(Vec3(0, 0, -9.81))
-        self.world.setDebugNode(self.debugNP.node())
+dlight_np = base.render.attach_new_node(dlight)
+dlight_np.setPos(0,0,10)
+dlight_np.lookAt(0,0,0)
+base.render.setLight(dlight_np)
 
-        model = self.loader.loadModel('floor.bam')
-        model.reparentTo(self.render)
-        floor = model.find('**/floor/+BulletRigidBodyNode')
-        floor.node().setMass(0)
-        self.world.attachRigidBody(floor.node())
+def lighting(task):
+    import math
 
-        model = self.loader.loadModel("converyor.bam")
-        model.reparentTo(self.render)
-        model.setPos(-0.2,-0.04,0.502/2)
-        converyor = model.find('**/converyor/+BulletRigidBodyNode')
-        converyor.reparentTo(model)
-        converyor.node().setMass(0)
-        converyor.node().setFriction(0)
-        self.world.attachRigidBody(converyor.node())
-        
-        model = self.loader.loadModel("box.bam")
-        model.reparentTo(self.render)
-        box = model.find('**/box/+BulletRigidBodyNode')
-        box.setPos(.4,-.2,0)
-        box.node().setMass(0)
-        self.world.attachRigidBody(box.node())
-
-        self.cube = self.loader.loadModel("cube.bam")
-        cube = self.cube.find('**/Cube/+BulletRigidBodyNode')
-        cube.setPos(-0.2,-0.8,1)
-
-        self.cube2 = self.loader.loadModel("cube2.bam")
-        cube2 = self.cube2.find('**/Cube/+BulletRigidBodyNode')
-        
-        self.camera3d = self.loader.loadModel("3d_camera.bam")
-        self.camera3d.setPos(-.7,-.6,0)
-        self.camera3d.reparentTo(self.render)
-
-        model = self.loader.loadModel("box.bam")
-        model.reparentTo(self.render)
-        box = model.find('**/box/+BulletRigidBodyNode')
-        box.setPos(.4,-.2,0)
-        box.node().setMass(0)
-        self.world.attachRigidBody(box.node())
-
-        model = Actor("panda.bam")
-        model.reparentTo(self.render)
-        self.panda = model
-        self.panda.setPos(0.3,0.4,0)
-        self.panda.setHpr(180,0,0)
-
-        self.base = model.controlJoint(None, "modelRoot", "base")
-        self.link0 = model.controlJoint(None, "modelRoot", "link0")
-        self.link1 = model.controlJoint(None, "modelRoot", "link1")
-        self.link2 = model.controlJoint(None, "modelRoot", "link2")
-        self.link3 = model.controlJoint(None, "modelRoot", "link3")
-        self.link4 = model.controlJoint(None, "modelRoot", "link4")
-        self.link5 = model.controlJoint(None, "modelRoot", "link5")
-        self.hand = model.controlJoint(None, "modelRoot", "link6")
-        self.finger_c = model.exposeJoint(None, "modelRoot", "finger_c")
-        self.finger_l = model.exposeJoint(None, "modelRoot", "finger_l")
-        self.finger_r = model.exposeJoint(None, "modelRoot", "finger_r")
-        
-        self.taskMgr.add(self.update, 'update')
-        self.taskMgr.add(self.lighting,'lighting')
-        self.taskMgr.do_method_later(1,self.package, 'package')
-        
-        self.accept('t', self.test)
-        self.accept('p', self.pick)
-        self.accept('r', self.reset)
-        self.accept('d', self.drop)
-
-    def test(self):
-        if not self.packages: return
-        
-        model = self.packages[-1]
-        self.package_picked = model.find('**/Cube/+BulletRigidBodyNode')
-
-        t = self.finger_c.getTransform().getMat() * self.panda.getTransform().getMat()
-        finger_c_pos = TransformState.makeMat(t).getPos()
-        self.package_picked_pos =  self.package_picked.getPos()
-        self.package_picked_hpr = self.package_picked.getHpr()
-
-        segs = LineSegs("lines")
-        segs.setThickness( 2.0 )
-        segs.setColor( Vec4(1,1,0,1) )
-        segs.moveTo(finger_c_pos)
-        segs.drawTo(self.package_picked_pos)
-
-        if 'segsnode' in dir(self): self.render.node().removeChild(self.segsnode)
-        self.segsnode = segs.create()
-        self.render.attachNewNode(self.segsnode)
+    x,y,z = dlight_np.getPos()
+    a = task.time / 5
+    r = 2
+    x = math.cos(a) * r
+    y = math.sin(a) * r
+    dlight_np.setPos(x,y,z)
+    dlight_np.lookAt(0,0,0)
+    return task.cont
     
-    
-    def drop(self):
-        pass
+base.taskMgr.add(lighting,'lighting')
 
-    def reset(self):
-        def joint_reset(joint,step,i,lower,upper,task):
-            if step.length() < 0.25: 
-                return task.done
+from panda3d.bullet import BulletWorld,BulletDebugNode
+bullet_world = BulletWorld()
+bullet_world.setGravity(Vec3(0, 0, -9.81))
+def do_physics(task):
+    from direct.showbase.ShowBaseGlobal import globalClock
+    dt = globalClock.get_dt()
+    bullet_world.doPhysics(dt,10, 1/180)
+    return task.cont
+base.task_mgr.add(do_physics, 'package')
 
-            hpr=joint.getHpr()
-            if hpr[i] < lower or hpr[i] > upper: 
-                hpr[i] = lower if hpr[i] < lower else upper
-                step /= -1
+debug = BulletDebugNode('Debug')
+debug_np = base.render.attachNewNode(debug)
+debug_np.show()
+debug.showWireframe(True)
+debug.showConstraints(False)
+debug.showBoundingBoxes(False)
+debug.showNormals(False)
+bullet_world.setDebugNode(debug)
 
-            if 0 < hpr[i] or hpr[i] < 0: step /= -2
-            print(hpr[i])
+from models.floor.floor import Floor
+floor_np = Floor(base).make(bullet_world)
+floor_np.setPos(0,0,-0.001)
 
-            joint.setHpr(hpr + step)
-            return task.again
+from models.converyor.converyor import Converyor
+converyor_np = Converyor(base).make(bullet_world)
 
-        for joint in self.joint_list:
-            from copy import deepcopy
-            self.taskMgr.add(joint_reset,str(joint),extraArgs=[joint[0],deepcopy(joint[1]),joint[2],joint[3],joint[4]],appendTask=True)
+from models.camera.camera import Camera
+camera_np = Camera(base).make()
+camera_np.setPos(0.497927,0,0)
 
-    def pick(self):
-        def joint_rotate(joint,step,i,lower,upper,offset,task):
-            hpr=joint.getHpr()
-            joint.setHpr(hpr + step)
-            
-            return task.again
+from models.box.box import Box
+box_np = Box(base).make(bullet_world)
+box_np.setPos(-0.649572,-0.348722,0)
 
-        def finished(task):
-            self.sort -= 1
+from models.robot.robot import Robot
+robot = Robot(base,bullet_world)
+robot_np = robot.node_path()
+robot_np.set_pos(-0.522699,0.261616,0)
 
-        self.joint_list = [
-            [self.hand,Vec3(0,0,1),2,-10,10], 
-            [self.link5,Vec3(1,0,0),0,-65,180],   
-            [self.link4,Vec3(0,0,1),2,-170,170],
-            [self.link3,Vec3(1,0,0),0,-180,0,90],
-            [self.link2,Vec3(0,0,1),2,-170,170],
-            [self.link1,Vec3(1,0,0),0,-170,170,0]
-        ]
+cube_np = base.loader.loadModel("models/cube/cube.bam")
+cube_np.set_depth_offset(-1)
 
-        self.sort = 2
-        self.taskMgr.add(joint_rotate,'joint_rotate',extraArgs=self.joint_list[3],appendTask=True,uponDeath=finished)
-        self.taskMgr.add(joint_rotate,'joint_rotate',extraArgs=self.joint_list[5],appendTask=True,uponDeath=finished)
-        
-    packages = list()
-    def package(self,task):
-        from copy import deepcopy
-        import random
+from copy import deepcopy
+model = deepcopy(cube_np)
+model.reparentTo(base.render)
+package_np = model.find('**/Cube/+BulletRigidBodyNode')
+package_np.setPos(0.02,0.261616,0.5)
+package_np.setHpr(0,0,180)
+package = package_np.node()
+package.set_mass(1)
+package.set_friction(1)
+bullet_world.attachRigidBody(package)
 
-        model = deepcopy(self.cube)
-        model.reparentTo(self.render)
-        new_package = model.find('**/Cube/+BulletRigidBodyNode')
-        new_package.setPos(random.uniform(-0.1,-0.3),-0.8,0.54)
-        self.world.attachRigidBody(new_package.node())
-        new_package.node().applyCentralForce(Vec3(0,0.1,0))
-        self.packages.append(model)
+packages = list()
+def package(task):
+    import random
 
-        return task.again
+    model = deepcopy(cube_np)
+    model.reparentTo(base.render)
+    package_np = model.find('**/Cube/+BulletRigidBodyNode')
+    package_np.setPos(random.uniform(-0.14,0.16),-0.7,0.5)
+    packages.append(package_np)
 
-    def lighting(self,task):
-        import math
+    package = package_np.node()
+    package.apply_central_impulse(Vec3(0,0.001 * 0.051,0))
+    bullet_world.attachRigidBody(package)
 
-        x,y,z = self.lnp.getPos()
-        a = task.time / 5
-        x = math.cos(a) * 10
-        y = math.sin(a) * 10
-        self.lnp.setPos(x,y,z)
-        self.lnp.lookAt(0,0,0)
-        return task.cont
+    # robot.pick(packages[0].getPos())
+    return task.again
 
-    def update(self, task):
-        self.world.doPhysics(globalClock.getDt(),1 , 1/180)
-        return task.cont
+# base.task_mgr.do_method_later(1,package, 'package')
 
-app = Application()
-app.run()
+base.accept('1',lambda: robot.joint1_degrees(robot.joint1.get_hinge_angle() + -5))
+base.accept('q',lambda: robot.joint1_degrees(robot.joint1.get_hinge_angle() + 5))
+base.accept('2',lambda: robot.joint2_degrees(robot.joint2.get_hinge_angle() + -5))
+base.accept('w',lambda: robot.joint2_degrees(robot.joint2.get_hinge_angle() + 5))
+base.accept('3',lambda: robot.joint3_degrees(robot.joint3.get_hinge_angle() + -5))
+base.accept('e',lambda: robot.joint3_degrees(robot.joint3.get_hinge_angle() + 5))
+base.accept('4',lambda: robot.joint4_degrees(robot.joint4.get_hinge_angle() + -5))
+base.accept('r',lambda: robot.joint4_degrees(robot.joint4.get_hinge_angle() + 5))
+base.accept('5',lambda: robot.joint5_degrees(robot.joint5.get_hinge_angle() + -5))
+base.accept('t',lambda: robot.joint5_degrees(robot.joint5.get_hinge_angle() + 5))
+base.accept('6',lambda: robot.joint6_degrees(robot.joint6.get_hinge_angle() + -5))
+base.accept('y',lambda: robot.joint6_degrees(robot.joint6.get_hinge_angle() + 5))
+base.accept('7',lambda: robot.joint7_degrees(robot.joint7.get_hinge_angle() + -5))
+base.accept('u',lambda: robot.joint7_degrees(robot.joint7.get_hinge_angle() + 5))
+base.accept('g',lambda: robot.joint_fingers(True))
+base.accept('b',lambda: robot.joint_fingers(False))
+base.accept('a',lambda: robot.grasp(Vec3(0.02,0.261616,0.5)))
+
+
+base.run()
