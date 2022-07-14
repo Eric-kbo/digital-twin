@@ -1,137 +1,170 @@
-from panda3d.core import Vec3,Vec4
+from cmath import cos
+import numpy as np
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+from panda3d.core import Vec3,LMatrix4,deg_2_rad,rad_2_deg
 
-from direct.showbase.ShowBase import ShowBase
-base = ShowBase()
+目标 = np.array([0.02,0.261616,0.5])
+目标轴 = Vec3(0,0,1)
+抓取半径 = 1
 
-base.cam.setPos(0, -2, 0.4)
-base.cam.lookAt(0, 0, 0.4)
+原点 = Vec3(-0.522699,0.261616,0)
+关节0偏移 = Vec3(0,0,0.14)
+关节1偏移 = Vec3(0,0,0.192006)
+关节2偏移 = Vec3(0,0,0.194)
+关节3偏移 = Vec3(0.082726,0,0.121018)
+关节4偏移 = Vec3(-0.082726,0,0.124001)
+关节5偏移 = Vec3(0,0,0.382976)
+关节6偏移 = Vec3(0.087827,0,0)
+关节7偏移 = Vec3(0,0,-0.10651)
+抓手偏移 = Vec3(0,0,-0.105)
 
-import simplepbr
-pipeline = simplepbr.init()
-pipeline.enable_shadows=True
+关节0角度限制 = (0,0)
+关节1角度限制 = [-170,170]
+关节1角度 = 0.
+关节2角度限制 = (-105,105)
+关节2角度 = 0.
+关节3角度限制 = (-170,170)
+关节3角度 = 0.
+关节4角度限制 = (-180,0)
+关节4角度 = 0.
+关节5角度限制 = (-170,170)
+关节5角度 = 0.
+关节6角度限制 = (-5,220)
+关节6角度 = -90.
+关节7角度限制 = (-170,170)
+关节7角度 = 0.
+活动关节 = 4
 
-from panda3d.core import AmbientLight
+graph = plt.figure(0)
+view = graph.add_subplot(projection='3d')
+plt.show(block=False)
+plt.ion()
 
-alight = AmbientLight('ambientLight')
-alight.set_color(Vec4(0.4, 0.4, 0.4, 1))
-alight_np = base.render.attach_new_node(alight)
-base.render.setLight(alight_np)
+while True:
+    view.cla()
 
-from panda3d.core import DirectionalLight
+    关节1开始 = 关节0结束 = 原点 + 关节0偏移
+    关节1矩阵 = LMatrix4.rotate_mat(关节1角度,Vec3(0,0,1))
+    关节2开始 = 关节1结束 = 关节1开始 + 关节1矩阵.xform_point(关节1偏移)
+    关节2矩阵 = LMatrix4.rotate_mat(关节2角度,Vec3(0,1,0)) * 关节1矩阵
+    关节3开始 = 关节2结束 = 关节2开始 + 关节2矩阵.xform_point(关节2偏移)
+    关节3矩阵 = LMatrix4.rotate_mat(关节3角度,Vec3(0,0,1)) * 关节2矩阵
+    关节4开始 = 关节3结束 = 关节3开始 + 关节3矩阵.xform_point(关节3偏移)
+    关节4矩阵 = LMatrix4.rotate_mat(关节4角度,Vec3(0,-1,0)) * 关节3矩阵
+    关节5开始 = 关节4结束 = 关节4开始 + 关节4矩阵.xform_point(关节4偏移)
+    关节5矩阵 = LMatrix4.rotate_mat(关节5角度,Vec3(0,0,1)) * 关节4矩阵
+    关节6开始 = 关节5结束 = 关节5开始 + 关节5矩阵.xform_point(关节5偏移)
+    关节6矩阵 = LMatrix4.rotate_mat(关节6角度,Vec3(0,1,0)) * 关节5矩阵
+    关节7开始 = 关节6结束 = 关节6开始 + 关节6矩阵.xform_point(关节6偏移)
+    关节7矩阵 = LMatrix4.rotate_mat(关节7角度,Vec3(0,0,1)) * 关节6矩阵
+    抓手开始 = 关节7结束 = np.array(关节7开始 + 关节7矩阵.xform_point(关节7偏移))
+    抓手矩阵 = LMatrix4.rotate_mat(0,Vec3(0,0,1)) * 关节7矩阵
+    抓手结束 = np.array(抓手开始 + 抓手矩阵.xform_point(抓手偏移))
+    抓手_目标 = np.array([抓手结束,目标])
+    目标距离 = np.linalg.norm(目标 - 抓手结束)
 
-dlight = DirectionalLight('directionalLight')
-dlight.set_color(Vec4(0.7, 0.7, 0.7, 1))
-dlight.setShadowCaster(True,1024,1024)
-lens = dlight.getLens()
-lens.setFilmSize(3,3)
+    关节1_目标 = 目标 - 关节1开始
+    关节1_抓手 = 抓手结束 - 关节1开始
+    关节1_目标 /= np.linalg.norm(关节1_目标)
+    关节1_抓手 /= np.linalg.norm(关节1_抓手)
+    关节1_抓手[2] = 关节1_目标[2] = 0
+    比值 = np.dot(关节1_目标,关节1_抓手) / (np.linalg.norm(关节1_目标) * np.linalg.norm(关节1_抓手))
+    弧度 = np.arccos(1 if 比值 > 1 else 比值)
+    水平角度1 = rad_2_deg(弧度)
+    if 关节1_目标[1] < 关节1_抓手[1]:
+        水平角度1 = -水平角度1
 
-dlight_np = base.render.attach_new_node(dlight)
-dlight_np.setPos(0,0,10)
-dlight_np.lookAt(0,0,0)
-base.render.setLight(dlight_np)
+    关节2_目标 = 目标 - 关节2开始
+    关节2_抓手 = 抓手结束 - 关节2开始
+    关节2_目标 /= np.linalg.norm(关节2_目标)
+    关节2_抓手 /= np.linalg.norm(关节2_抓手)
+    比值 = np.dot(关节2_抓手,关节2_目标) / (np.linalg.norm(关节2_抓手) * np.linalg.norm(关节2_目标))
+    弧度 = np.arccos(1 if 比值 > 1 else 比值)
+    垂直角度2 = rad_2_deg(弧度)
+    if 关节2_目标[2] > 关节2_抓手[2]:
+        垂直角度2 = -垂直角度2
 
-def lighting(task):
-    import math
+    关节4_目标 = 目标 - 关节4开始
+    关节4_抓手 = 抓手结束 - 关节4开始
+    关节4_目标 /= np.linalg.norm(关节4_目标)
+    关节4_抓手 /= np.linalg.norm(关节4_抓手)
+    比值 = np.dot(关节4_抓手,关节4_目标) / (np.linalg.norm(关节4_抓手) * np.linalg.norm(关节4_目标))
+    弧度 = np.arccos(1 if 比值 > 1 else 比值)
+    垂直角度4 = rad_2_deg(弧度)
+    if 关节4_目标[2] < 关节4_抓手[2]:
+        垂直角度4 = -垂直角度4
 
-    x,y,z = dlight_np.getPos()
-    a = task.time / 5
-    r = 2
-    x = math.cos(a) * r
-    y = math.sin(a) * r
-    dlight_np.setPos(x,y,z)
-    dlight_np.lookAt(0,0,0)
-    return task.cont
-    
-base.taskMgr.add(lighting,'lighting')
+    关节1角度 += 水平角度1
 
-from panda3d.bullet import BulletWorld,BulletDebugNode
-bullet_world = BulletWorld()
-bullet_world.setGravity(Vec3(0, 0, -9.81))
-def do_physics(task):
-    from direct.showbase.ShowBaseGlobal import globalClock
-    dt = globalClock.get_dt()
-    bullet_world.doPhysics(dt,10, 1/180)
-    return task.cont
-base.task_mgr.add(do_physics, 'package')
+    if 活动关节 == 4:
+        关节4角度 += 垂直角度4
+        活动关节 = 2
+    else:
+        关节2角度 += 垂直角度2
+        活动关节 = 4
 
-debug = BulletDebugNode('Debug')
-debug_np = base.render.attachNewNode(debug)
-debug_np.show()
-debug.showWireframe(True)
-debug.showConstraints(False)
-debug.showBoundingBoxes(False)
-debug.showNormals(False)
-bullet_world.setDebugNode(debug)
+    print(水平角度1,垂直角度2,垂直角度4)
+    if abs(水平角度1) + abs(垂直角度2) + abs(垂直角度4) < 0.1:
+        if 关节1角度限制[0] > 关节1角度 or 关节1角度 > 关节1角度限制[1] or \
+            关节2角度限制[0] > 关节2角度 or 关节2角度 > 关节2角度限制[1] or \
+            关节4角度限制[0] > 关节4角度 or 关节4角度 > 关节4角度限制[1]:
 
-from models.floor.floor import Floor
-floor_np = Floor(base).make(bullet_world)
-floor_np.setPos(0,0,-0.001)
+            print('角度限制!',关节1角度,关节2角度,关节4角度)
+            
+        if abs(目标距离) > 0.01:
+            print('距离不够!',目标距离)
+            
+        print('finished')
 
-from models.converyor.converyor import Converyor
-converyor_np = Converyor(base).make(bullet_world)
+    关节0 = np.array([原点,关节0结束])
+    关节1 = np.array([关节1开始,关节1结束])
+    关节2 = np.array([关节2开始,关节2结束])
+    关节3 = np.array([关节3开始,关节3结束])
+    关节4 = np.array([关节4开始,关节4结束])
+    关节5 = np.array([关节5开始,关节5结束])
+    关节6 = np.array([关节6开始,关节6结束])
+    关节7 = np.array([关节7开始,关节7结束])
+    抓手 = np.array([抓手开始,抓手结束])
+        
+    p0 = np.array([-1.3,-1.3,0])
+    p1 = np.array([1.3,-1.3,0])
+    p2 = np.array([1.3,1.3,0])
+    p3 = np.array([-1.3,1.3,0])
+    view.plot(
+            [p0[0],p1[0],p2[0],p3[0],p0[0]],
+            [p0[1],p1[1],p2[1],p3[1],p0[1]],
+            [p0[2],p1[2],p2[2],p3[2],p0[2]],
+            linewidth=.5,linestyle='-.')
 
-from models.camera.camera import Camera
-camera_np = Camera(base).make()
-camera_np.setPos(0.497927,0,0)
+    p0 = np.array([-1.3,-1.3,1.3])
+    p1 = np.array([1.3,-1.3,1.3])
+    p2 = np.array([1.3,1.3,1.3])
+    p3 = np.array([-1.3,1.3,1.3])
+    view.plot(
+            [p0[0],p1[0],p2[0],p3[0],p0[0]],
+            [p0[1],p1[1],p2[1],p3[1],p0[1]],
+            [p0[2],p1[2],p2[2],p3[2],p0[2]],
+            linewidth=.5,linestyle='-.')
 
-from models.box.box import Box
-box_np = Box(base).make(bullet_world)
-box_np.setPos(-0.649572,-0.348722,0)
-
-from models.robot.robot import Robot
-robot = Robot(base,bullet_world)
-robot_np = robot.node_path()
-robot_np.set_pos(-0.522699,0.261616,0)
-
-cube_np = base.loader.loadModel("models/cube/cube.bam")
-cube_np.set_depth_offset(-1)
-
-from copy import deepcopy
-model = deepcopy(cube_np)
-model.reparentTo(base.render)
-package_np = model.find('**/Cube/+BulletRigidBodyNode')
-package_np.setPos(0.02,0.261616,0.5)
-package_np.setHpr(0,0,180)
-package = package_np.node()
-package.set_mass(1)
-package.set_friction(1)
-bullet_world.attachRigidBody(package)
-
-packages = list()
-def package(task):
-    import random
-
-    model = deepcopy(cube_np)
-    model.reparentTo(base.render)
-    package_np = model.find('**/Cube/+BulletRigidBodyNode')
-    package_np.setPos(random.uniform(-0.14,0.16),-0.7,0.5)
-    packages.append(package_np)
-
-    package = package_np.node()
-    package.apply_central_impulse(Vec3(0,0.001 * 0.051,0))
-    bullet_world.attachRigidBody(package)
-
-    # robot.pick(packages[0].getPos())
-    return task.again
-
-# base.task_mgr.do_method_later(1,package, 'package')
-
-base.accept('1',lambda: robot.joint1_degrees(robot.joint1.get_hinge_angle() + -5))
-base.accept('q',lambda: robot.joint1_degrees(robot.joint1.get_hinge_angle() + 5))
-base.accept('2',lambda: robot.joint2_degrees(robot.joint2.get_hinge_angle() + -5))
-base.accept('w',lambda: robot.joint2_degrees(robot.joint2.get_hinge_angle() + 5))
-base.accept('3',lambda: robot.joint3_degrees(robot.joint3.get_hinge_angle() + -5))
-base.accept('e',lambda: robot.joint3_degrees(robot.joint3.get_hinge_angle() + 5))
-base.accept('4',lambda: robot.joint4_degrees(robot.joint4.get_hinge_angle() + -5))
-base.accept('r',lambda: robot.joint4_degrees(robot.joint4.get_hinge_angle() + 5))
-base.accept('5',lambda: robot.joint5_degrees(robot.joint5.get_hinge_angle() + -5))
-base.accept('t',lambda: robot.joint5_degrees(robot.joint5.get_hinge_angle() + 5))
-base.accept('6',lambda: robot.joint6_degrees(robot.joint6.get_hinge_angle() + -5))
-base.accept('y',lambda: robot.joint6_degrees(robot.joint6.get_hinge_angle() + 5))
-base.accept('7',lambda: robot.joint7_degrees(robot.joint7.get_hinge_angle() + -5))
-base.accept('u',lambda: robot.joint7_degrees(robot.joint7.get_hinge_angle() + 5))
-base.accept('g',lambda: robot.joint_fingers(True))
-base.accept('p',lambda: robot.joint_fingers(False))
+    view.plot(关节0[:,0],关节0[:,1],关节0[:,2])
+    view.plot(抓手[:,0],抓手[:,1],抓手[:,2])
+    view.plot(关节7[:,0],关节7[:,1],关节7[:,2])
+    view.plot(关节6[:,0],关节6[:,1],关节6[:,2])
+    view.plot(关节5[:,0],关节5[:,1],关节5[:,2])
+    view.plot(关节4[:,0],关节4[:,1],关节4[:,2])
+    view.plot(关节3[:,0],关节3[:,1],关节3[:,2])
+    view.plot(关节2[:,0],关节2[:,1],关节2[:,2])
+    view.plot(关节1[:,0],关节1[:,1],关节1[:,2])
+    view.plot(抓手_目标[:,0],抓手_目标[:,1],抓手_目标[:,2],linestyle='dotted')
+    view.scatter(*关节2开始)
+    view.scatter(*关节4开始)
+    view.scatter(*目标)
+    view.text(*目标,f'{目标距离}')
 
 
-base.run()
+    graph.canvas.draw()
+    graph.canvas.flush_events()
+    # plt.pause(1)
+
+plt.ioff()
