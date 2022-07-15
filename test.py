@@ -5,8 +5,7 @@ from mpl_toolkits.mplot3d import Axes3D
 from panda3d.core import Vec3,LMatrix4,deg_2_rad,rad_2_deg
 
 目标 = np.array([0.02,0.261616,0.5])
-目标轴 = Vec3(0,0,1)
-抓取半径 = 1
+目标姿态 = Vec3(0,0,0) #HPR
 
 原点 = Vec3(-0.522699,0.261616,0)
 关节0偏移 = Vec3(0,0,0.14)
@@ -29,11 +28,11 @@ from panda3d.core import Vec3,LMatrix4,deg_2_rad,rad_2_deg
 关节4角度限制 = (-180,0)
 关节4角度 = 0.
 关节5角度限制 = (-170,170)
-关节5角度 = 0.
+关节5角度 = 目标姿态[2]
 关节6角度限制 = (-5,220)
-关节6角度 = -90.
+关节6角度 = 目标姿态[1]
 关节7角度限制 = (-170,170)
-关节7角度 = 0.
+关节7角度 = 目标姿态[0]
 活动关节 = 4
 
 graph = plt.figure(0)
