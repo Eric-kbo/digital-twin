@@ -67,21 +67,21 @@ from models.floor.floor import Floor
 floor_np = Floor(base).make(bullet_world)
 floor_np.setPos(0,0,-0.001)
 
+from models.robot.robot import Robot
+robot = Robot(base,bullet_world)
+robot_np = robot.node_path()
+robot_np.set_pos(-0.522699,0.261616,0)
+
+from models.box.box import Box
+box_np = Box(base).make(bullet_world)
+box_np.setPos(-0.649572,-0.348722,0)
+
 from models.converyor.converyor import Converyor
 converyor_np = Converyor(base).make(bullet_world)
 
 from models.camera.camera import Camera
 camera_np = Camera(base).make()
 camera_np.setPos(0.497927,0,0)
-
-from models.box.box import Box
-box_np = Box(base).make(bullet_world)
-box_np.setPos(-0.649572,-0.348722,0)
-
-from models.robot.robot import Robot
-robot = Robot(base,bullet_world)
-robot_np = robot.node_path()
-robot_np.set_pos(-0.522699,0.261616,0)
 
 cube_np = base.loader.loadModel("models/cube/cube.bam")
 cube_np.set_depth_offset(-1)
@@ -132,7 +132,7 @@ base.accept('7',lambda: robot.joint7_degrees(robot.joint7.get_hinge_angle() + -5
 base.accept('u',lambda: robot.joint7_degrees(robot.joint7.get_hinge_angle() + 5))
 base.accept('g',lambda: robot.joint_fingers(True))
 base.accept('b',lambda: robot.joint_fingers(False))
-base.accept('a',lambda: robot.grasp(Vec3(0.02,0.261616,0.5)))
+base.accept('a',lambda: robot.move(package_np.get_pos(),0,0,0))
 
 
 base.run()

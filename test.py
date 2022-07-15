@@ -2,12 +2,14 @@ from cmath import cos
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-from panda3d.core import Vec3,LMatrix4,deg_2_rad,rad_2_deg
+from panda3d.core import Vec3,LMatrix4,deg_2_rad,rad_2_deg,Quat
 
-目标 = np.array([0.02,0.261616,0.5])
-目标姿态 = Vec3(0,0,0) #HPR
+偏航=0
+俯仰=0
+翻滚=0
+目标 = np.array([0.02,0.261616,0.5]) - [-0.522699,0.261616,0]
 
-原点 = Vec3(-0.522699,0.261616,0)
+原点 = Vec3(0,0,0)
 关节0偏移 = Vec3(0,0,0.14)
 关节1偏移 = Vec3(0,0,0.192006)
 关节2偏移 = Vec3(0,0,0.194)
@@ -28,12 +30,12 @@ from panda3d.core import Vec3,LMatrix4,deg_2_rad,rad_2_deg
 关节4角度限制 = (-180,0)
 关节4角度 = 0.
 关节5角度限制 = (-170,170)
-关节5角度 = 目标姿态[2]
+关节5角度 = -俯仰
 关节6角度限制 = (-5,220)
-关节6角度 = 目标姿态[1]
+关节6角度 = -翻滚
 关节7角度限制 = (-170,170)
-关节7角度 = 目标姿态[0]
-活动关节 = 4
+关节7角度 = -偏航
+活动关节 = 1
 
 graph = plt.figure(0)
 view = graph.add_subplot(projection='3d')
@@ -54,15 +56,16 @@ while True:
     关节5开始 = 关节4结束 = 关节4开始 + 关节4矩阵.xform_point(关节4偏移)
     关节5矩阵 = LMatrix4.rotate_mat(关节5角度,Vec3(0,0,1)) * 关节4矩阵
     关节6开始 = 关节5结束 = 关节5开始 + 关节5矩阵.xform_point(关节5偏移)
-    关节6矩阵 = LMatrix4.rotate_mat(关节6角度,Vec3(0,1,0)) * 关节5矩阵
+    关节6矩阵 = LMatrix4.rotate_mat(关节6角度,Vec3(0,-1,0)) * 关节5矩阵
     关节7开始 = 关节6结束 = 关节6开始 + 关节6矩阵.xform_point(关节6偏移)
-    关节7矩阵 = LMatrix4.rotate_mat(关节7角度,Vec3(0,0,1)) * 关节6矩阵
+    关节7矩阵 = LMatrix4.rotate_mat(关节7角度,Vec3(0,0,-1)) * 关节6矩阵
     抓手开始 = 关节7结束 = np.array(关节7开始 + 关节7矩阵.xform_point(关节7偏移))
-    抓手矩阵 = LMatrix4.rotate_mat(0,Vec3(0,0,1)) * 关节7矩阵
+    抓手矩阵 = 关节7矩阵
     抓手结束 = np.array(抓手开始 + 抓手矩阵.xform_point(抓手偏移))
-    抓手_目标 = np.array([抓手结束,目标])
+    抓手姿态 = Quat()
+    抓手姿态.set_from_matrix(抓手矩阵)
     目标距离 = np.linalg.norm(目标 - 抓手结束)
-
+    
     关节1_目标 = 目标 - 关节1开始
     关节1_抓手 = 抓手结束 - 关节1开始
     关节1_目标 /= np.linalg.norm(关节1_目标)
@@ -93,28 +96,53 @@ while True:
     垂直角度4 = rad_2_deg(弧度)
     if 关节4_目标[2] < 关节4_抓手[2]:
         垂直角度4 = -垂直角度4
+        
+    h,p,r = 抓手姿态.get_hpr()
 
-    关节1角度 += 水平角度1
-
-    if 活动关节 == 4:
+    print('活动关节',活动关节)
+    print( h,p,r )
+    if 活动关节 == 0:
+        活动关节 = 1
+    elif 活动关节 == 1:
+        关节1角度 += 水平角度1
+        活动关节 = 4
+    elif 活动关节 == 2:
+        关节2角度 += 垂直角度2
+        活动关节 = 5
+    elif 活动关节 == 3:
+        活动关节 = 5
+    elif 活动关节 == 4:
         关节4角度 += 垂直角度4
         活动关节 = 2
+    elif 活动关节 == 5:
+        关节5角度 += p
+        活动关节 = 6
+    elif 活动关节 == 6:
+        关节6角度 += r
+        活动关节 = 7
+    elif 活动关节 == 7:
+        关节7角度 += -h
+        活动关节 = 1
     else:
-        关节2角度 += 垂直角度2
-        活动关节 = 4
-
-    print(水平角度1,垂直角度2,垂直角度4)
-    if abs(水平角度1) + abs(垂直角度2) + abs(垂直角度4) < 0.1:
-        if 关节1角度限制[0] > 关节1角度 or 关节1角度 > 关节1角度限制[1] or \
-            关节2角度限制[0] > 关节2角度 or 关节2角度 > 关节2角度限制[1] or \
-            关节4角度限制[0] > 关节4角度 or 关节4角度 > 关节4角度限制[1]:
-
-            print('角度限制!',关节1角度,关节2角度,关节4角度)
-            
+        pass
+        
+    if abs(水平角度1) + abs(垂直角度2) + abs(垂直角度4) < 0.5:
         if abs(目标距离) > 0.01:
             print('距离不够!',目标距离)
+            break
+    
+        if 关节1角度限制[0] > 关节1角度 or 关节1角度 > 关节1角度限制[1] or \
+            关节2角度限制[0] > 关节2角度 or 关节2角度 > 关节2角度限制[1] or \
+            关节4角度限制[0] > 关节4角度 or 关节4角度 > 关节4角度限制[1] or \
+            关节5角度限制[0] > 关节5角度 or 关节5角度 > 关节5角度限制[1] or \
+            关节6角度限制[0] > 关节6角度 or 关节6角度 > 关节6角度限制[1] or \
+            关节7角度限制[0] > 关节7角度 or 关节7角度 > 关节7角度限制[1]:
+
+            print('角度限制!',关节1角度,关节2角度,关节4角度,关节5角度限制,关节6角度限制,关节7角度限制)
+            break
             
         print('finished')
+        break
 
     关节0 = np.array([原点,关节0结束])
     关节1 = np.array([关节1开始,关节1结束])
@@ -125,7 +153,8 @@ while True:
     关节6 = np.array([关节6开始,关节6结束])
     关节7 = np.array([关节7开始,关节7结束])
     抓手 = np.array([抓手开始,抓手结束])
-        
+    抓手_目标 = np.array([抓手结束,目标])
+
     p0 = np.array([-1.3,-1.3,0])
     p1 = np.array([1.3,-1.3,0])
     p2 = np.array([1.3,1.3,0])
@@ -145,7 +174,7 @@ while True:
             [p0[1],p1[1],p2[1],p3[1],p0[1]],
             [p0[2],p1[2],p2[2],p3[2],p0[2]],
             linewidth=.5,linestyle='-.')
-
+    
     view.plot(关节0[:,0],关节0[:,1],关节0[:,2])
     view.plot(抓手[:,0],抓手[:,1],抓手[:,2])
     view.plot(关节7[:,0],关节7[:,1],关节7[:,2])
@@ -163,7 +192,7 @@ while True:
 
 
     graph.canvas.draw()
-    graph.canvas.flush_events()
+    graph.canvas.flush_events()   
     # plt.pause(1)
 
 plt.ioff()
