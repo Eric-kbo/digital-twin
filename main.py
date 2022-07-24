@@ -1,6 +1,7 @@
 from panda3d.core import Vec3,Vec4
 
 from direct.showbase.ShowBase import ShowBase
+from direct.showbase.ShowBaseGlobal import globalClock
 base = ShowBase()
 
 base.cam.setPos(0, -2, 0.4)
@@ -47,21 +48,20 @@ base.taskMgr.add(lighting,'lighting')
 from panda3d.bullet import BulletWorld,BulletDebugNode
 bullet_world = BulletWorld()
 bullet_world.setGravity(Vec3(0, 0, -9.81))
+
 def do_physics(task):
-    from direct.showbase.ShowBaseGlobal import globalClock
-    dt = globalClock.get_dt()
-    bullet_world.doPhysics(dt,10, 1/180)
+    bullet_world.doPhysics(globalClock.get_dt(),10, 1/180)
     return task.cont
 base.task_mgr.add(do_physics, 'package')
 
 debug = BulletDebugNode('Debug')
-debug_np = base.render.attachNewNode(debug)
-debug_np.show()
-debug.showWireframe(True)
+debug.showWireframe(False)
 debug.showConstraints(False)
 debug.showBoundingBoxes(False)
 debug.showNormals(False)
-bullet_world.setDebugNode(debug)
+# debug_np = base.render.attachNewNode(debug)
+# debug_np.show()
+# bullet_world.setDebugNode(debug)
 
 from models.floor.floor import Floor
 floor_np = Floor(base).make(bullet_world)
@@ -71,6 +71,8 @@ from models.robot.robot import Robot
 robot = Robot(base,bullet_world)
 robot_np = robot.node_path()
 robot_np.set_pos(-0.522699,0.261616,0)
+
+bullet_world.doPhysics(globalClock.get_dt(),10, 1/180)
 
 from models.box.box import Box
 box_np = Box(base).make(bullet_world)
@@ -116,23 +118,24 @@ def package(task):
 
 # base.task_mgr.do_method_later(1,package, 'package')
 
-base.accept('1',lambda: robot.joint1_degrees(robot.joint1.get_hinge_angle() + -5))
-base.accept('q',lambda: robot.joint1_degrees(robot.joint1.get_hinge_angle() + 5))
-base.accept('2',lambda: robot.joint2_degrees(robot.joint2.get_hinge_angle() + -5))
-base.accept('w',lambda: robot.joint2_degrees(robot.joint2.get_hinge_angle() + 5))
-base.accept('3',lambda: robot.joint3_degrees(robot.joint3.get_hinge_angle() + -5))
-base.accept('e',lambda: robot.joint3_degrees(robot.joint3.get_hinge_angle() + 5))
-base.accept('4',lambda: robot.joint4_degrees(robot.joint4.get_hinge_angle() + -5))
-base.accept('r',lambda: robot.joint4_degrees(robot.joint4.get_hinge_angle() + 5))
-base.accept('5',lambda: robot.joint5_degrees(robot.joint5.get_hinge_angle() + -5))
-base.accept('t',lambda: robot.joint5_degrees(robot.joint5.get_hinge_angle() + 5))
-base.accept('6',lambda: robot.joint6_degrees(robot.joint6.get_hinge_angle() + -5))
-base.accept('y',lambda: robot.joint6_degrees(robot.joint6.get_hinge_angle() + 5))
-base.accept('7',lambda: robot.joint7_degrees(robot.joint7.get_hinge_angle() + -5))
-base.accept('u',lambda: robot.joint7_degrees(robot.joint7.get_hinge_angle() + 5))
+base.accept('1',lambda: robot.joint1_degrees(robot.joint1.get_hinge_angle() + -1))
+base.accept('q',lambda: robot.joint1_degrees(robot.joint1.get_hinge_angle() + 1))
+base.accept('2',lambda: robot.joint2_degrees(robot.joint2.get_hinge_angle() + -1))
+base.accept('w',lambda: robot.joint2_degrees(robot.joint2.get_hinge_angle() + 1))
+base.accept('3',lambda: robot.joint3_degrees(robot.joint3.get_hinge_angle() + -1))
+base.accept('e',lambda: robot.joint3_degrees(robot.joint3.get_hinge_angle() + 1))
+base.accept('4',lambda: robot.joint4_degrees(robot.joint4.get_hinge_angle() + -1))
+base.accept('r',lambda: robot.joint4_degrees(robot.joint4.get_hinge_angle() + 1))
+base.accept('5',lambda: robot.joint5_degrees(robot.joint5.get_hinge_angle() + -1))
+base.accept('t',lambda: robot.joint5_degrees(robot.joint5.get_hinge_angle() + 1))
+base.accept('6',lambda: robot.joint6_degrees(robot.joint6.get_hinge_angle() + -1))
+base.accept('y',lambda: robot.joint6_degrees(robot.joint6.get_hinge_angle() + 1))
+base.accept('7',lambda: robot.joint7_degrees(robot.joint7.get_hinge_angle() + -1))
+base.accept('u',lambda: robot.joint7_degrees(robot.joint7.get_hinge_angle() + 1))
 base.accept('g',lambda: robot.joint_fingers(True))
 base.accept('b',lambda: robot.joint_fingers(False))
 base.accept('a',lambda: robot.move(package_np.get_pos(),0,0,0))
+
 
 
 base.run()

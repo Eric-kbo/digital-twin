@@ -70,7 +70,7 @@ class Robot():
         self.joint2 = hinge = BulletHingeConstraint(link1, link2, pivotA, pivotB, axisA, axisB, True)
         self.joint2_limit = (-105, 105)
         hinge.set_limit(0,0)
-        hinge.enableAngularMotor(True,-2.175,87)
+        hinge.enableAngularMotor(True,-0.175,87)
         bullet_world.attachConstraint(hinge)
 
         self.link3_np = link3_np = base.loader.loadModel('models/robot/meshes/collision/link3.bam').find('**/+BulletRigidBodyNode')
@@ -169,7 +169,7 @@ class Robot():
         self.joint6 = hinge = BulletHingeConstraint(link5, link6, pivotA, pivotB, axisA, axisB, True)
         self.joint6_limit = (-5, 220)
         hinge.set_limit(30,30)
-        hinge.enableAngularMotor(True,2.610,12)
+        hinge.enableAngularMotor(True,0.610,12)
         bullet_world.attachConstraint(hinge)
 
         link7_np = base.loader.loadModel('models/robot/meshes/collision/link7.bam').find('**/+BulletRigidBodyNode')
@@ -303,31 +303,31 @@ class Robot():
     def node_path(self):
         return self.link0_np
     def joint1_degrees(self,degrees):
-        volocity = 2.175 if degrees > self.joint1.get_hinge_angle() else -2.175
+        volocity = 0.175 if degrees > self.joint1.get_hinge_angle() else -0.175
         self.joint1.set_limit(low=degrees,high=degrees)
         self.joint1.set_motor_target(volocity,1)
     def joint2_degrees(self,degrees):
-        volocity = 2.175 if degrees > self.joint2.get_hinge_angle() else -2.175
+        volocity = 0.175 if degrees > self.joint2.get_hinge_angle() else -0.175
         self.joint2.set_limit(low=degrees,high=degrees)
         self.joint2.set_motor_target(volocity,1)
     def joint3_degrees(self,degrees):
-        volocity = 2.175 if degrees > self.joint3.get_hinge_angle() else -2.175
+        volocity = 0.175 if degrees > self.joint3.get_hinge_angle() else -0.175
         self.joint3.set_limit(low=degrees,high=degrees)
         self.joint3.set_motor_target(volocity,1)
     def joint4_degrees(self,degrees):
-        volocity = 2.175 if degrees > self.joint4.get_hinge_angle() else -2.175
+        volocity = 0.175 if degrees > self.joint4.get_hinge_angle() else -0.175
         self.joint4.set_limit(low=degrees,high=degrees)
         self.joint4.set_motor_target(volocity,1)
     def joint5_degrees(self,degrees):
-        volocity = 2.610 if degrees > self.joint5.get_hinge_angle() else -2.610 
+        volocity = 0.610 if degrees > self.joint5.get_hinge_angle() else -0.610 
         self.joint5.set_limit(low=degrees,high=degrees)
         self.joint5.set_motor_target(volocity,1)
     def joint6_degrees(self,degrees):
-        volocity = 2.610 if degrees > self.joint6.get_hinge_angle() else -2.610 
+        volocity = 0.610 if degrees > self.joint6.get_hinge_angle() else -0.610 
         self.joint6.set_limit(low=degrees,high=degrees)
         self.joint6.set_motor_target(volocity,1)
     def joint7_degrees(self,degrees):
-        volocity = 2.610 if degrees > self.joint7.get_hinge_angle() else -2.610 
+        volocity = 0.610 if degrees > self.joint7.get_hinge_angle() else -0.610 
         self.joint7.set_limit(low=degrees,high=degrees)
         self.joint7.set_motor_target(volocity,1)
 
@@ -388,7 +388,6 @@ class Robot():
         关节7偏移 = Vec3(0,0,-0.107012)
         抓手偏移 = Vec3(0,0,-0.107911)
 
-
         关节0角度限制 = (0,0)
         关节1角度限制 = [-170,170]
         关节1角度 = 0.
@@ -399,12 +398,12 @@ class Robot():
         关节4角度限制 = (-180,0)
         关节4角度 = 0.
         关节5角度限制 = (-170,170)
-        关节5角度 = -俯仰
+        关节5角度 = 0
         关节6角度限制 = (-5,220)
-        关节6角度 = -翻滚
+        关节6角度 = 0
         关节7角度限制 = (-170,170)
-        关节7角度 = -偏航
-        活动关节 = 1
+        关节7角度 = 0
+        活动关节列表 = list()
 
         while True:
             关节1开始 = 关节0结束 = 原点 + 关节0偏移
@@ -458,48 +457,54 @@ class Robot():
             垂直角度4 = rad_2_deg(弧度)
             if 关节4_目标[2] < 关节4_抓手[2]:
                 垂直角度4 = -垂直角度4
-
+    
             h,p,r = 抓手姿态.get_hpr()
-            
+            h,p,r = -h,-r,p
+            偏航角度 = 偏航 - h
+            俯仰角度 = 俯仰 - p
+            翻滚角度 = 翻滚 - r
 
+            print('抓手姿态',h,p,r)
+
+            if not len(活动关节列表):
+                活动关节列表.extend([5,1])
+
+            活动关节 = 活动关节列表.pop(0)
             print('活动关节',活动关节)
-            print( h,p,r )
-            if 活动关节 == 0:
-                活动关节 = 1
-            elif 活动关节 == 1:
+            
+            if 活动关节 == 1:
                 关节1角度 += 水平角度1
-                活动关节 = 4
+                if 关节1角度 < 关节1角度限制[0]: 关节1角度 = 关节1角度限制[0]
+                if 关节1角度 > 关节1角度限制[1]: 关节1角度 = 关节1角度限制[1]
+                活动关节列表.extend([5,4])
             elif 活动关节 == 2:
                 关节2角度 += 垂直角度2
-                活动关节 = 5
+                if 关节2角度 < 关节2角度限制[0]: 关节2角度 = 关节2角度限制[0]
+                if 关节2角度 > 关节2角度限制[1]: 关节2角度 = 关节2角度限制[1]
+                活动关节列表.extend([5,1])
             elif 活动关节 == 3:
-                活动关节 = 5
+                活动关节 = 1
             elif 活动关节 == 4:
                 关节4角度 += 垂直角度4
-                活动关节 = 2
+                if 关节4角度 < 关节4角度限制[0]: 关节4角度 = 关节4角度限制[0]
+                if 关节4角度 > 关节4角度限制[1]: 关节4角度 = 关节4角度限制[1]
+                活动关节列表.extend([5,2])
             elif 活动关节 == 5:
-                关节5角度 += p
-                活动关节 = 6
-            elif 活动关节 == 6:
-                关节6角度 += r
-                活动关节 = 7
-            elif 活动关节 == 7:
-                关节7角度 += -h
-                活动关节 = 1
-            else:
-                pass
+                # 关节5角度 += 翻滚角度
+                # if 关节5角度 < 关节5角度限制[0]: 关节5角度 = 关节5角度限制[0]
+                # if 关节5角度 > 关节5角度限制[1]: 关节5角度 = 关节5角度限制[1]
+                关节6角度 += 俯仰角度
+                if 关节6角度 < 关节6角度限制[0]: 关节6角度 = 关节6角度限制[0]
+                if 关节6角度 > 关节6角度限制[1]: 关节6角度 = 关节6角度限制[1]
+                # 关节7角度 += -偏航角度
+                # if 关节7角度 < 关节7角度限制[0]: 关节7角度 = 关节7角度限制[0]
+                # if 关节7角度 > 关节7角度限制[1]: 关节7角度 = 关节7角度限制[1]
             
-            if abs(水平角度1) + abs(垂直角度2) + abs(垂直角度4) < 0.5:
-                if abs(目标距离) > 0.01:
+            目标角度 = abs(水平角度1) + abs(垂直角度2) + abs(垂直角度4) + abs(俯仰角度) 
+            print(水平角度1,垂直角度2,垂直角度4,俯仰角度)
+            if abs(目标距离) < 0.01 or 目标角度 < 1:
+                if abs(目标距离) > 0.02:
                     raise Exception('超出范围!',目标距离)
-
-                if 关节1角度限制[0] > 关节1角度 or 关节1角度 > 关节1角度限制[1] or \
-                    关节2角度限制[0] > 关节2角度 or 关节2角度 > 关节2角度限制[1] or \
-                    关节4角度限制[0] > 关节4角度 or 关节4角度 > 关节4角度限制[1] or \
-                    关节5角度限制[0] > 关节5角度 or 关节5角度 > 关节5角度限制[1] or \
-                    关节6角度限制[0] > 关节6角度 or 关节6角度 > 关节6角度限制[1] or \
-                    关节7角度限制[0] > 关节7角度 or 关节7角度 > 关节7角度限制[1]:
-                    raise Exception('角度限制!',[0,关节1角度,关节2角度,关节3角度,关节4角度,关节5角度,关节6角度,关节7角度])
 
                 return [0,关节1角度,关节2角度,关节3角度,关节4角度,关节5角度,关节6角度,关节7角度]
         pass
@@ -507,6 +512,7 @@ class Robot():
     def move(self,目标位置,翻滚=0,俯仰=0,偏航=0):
         机械臂位置 = self.link0_np.get_pos()
         关节角度 = self.IK(目标位置-机械臂位置,翻滚,俯仰,偏航)
+        print(关节角度)
 
         self.joint1_degrees(关节角度[1])
         self.joint2_degrees(关节角度[2])
