@@ -356,17 +356,18 @@ class Robot():
             return task.again
             
         self.stuff_np = self.base.render.find_path_to(stuff)
-        pivotA = Point3(0, 0, 0.103) - (self.stuff_np.get_pos() - self.target_np.get_pos())
+        pivotA = Vec3(0, 0, 0.103) - (self.stuff_np.get_pos() - self.target_np.get_pos())
         pivotB = Point3(0, 0, 0)
 
-        axisA = -self.hand_np.get_quat().get_up()
-        axisB = Vec3(0, 0, 1)
+        axisA = self.stuff_np.get_quat().get_axis()
+        axisB = Vec3(0, 0, 0)
         
         self.joint_finger_left.setTargetLinearMotorVelocity(0.0)
         self.joint_finger_right.setTargetLinearMotorVelocity(0.0)
-        self.joint_target = BulletHingeConstraint(self.hand_np.node(),stuff, pivotA, pivotB,axisA, axisB, True)
+        self.joint_target = BulletHingeConstraint(self.hand_np.node(),stuff, pivotA, pivotB, axisA, axisB, True)
         self.joint_target.setLimit(0,0)
         self.bullet_world.attach_constraint(self.joint_target)
+
         return task.done
 
     def joint_fingers(self,grasp=True):
@@ -510,7 +511,7 @@ class Robot():
             
             目标角度 = abs(水平角度1) + abs(垂直角度2) + abs(垂直角度4) + abs(俯仰角度) 
             print('目标角度',水平角度1,垂直角度2,垂直角度4,俯仰角度)
-            if abs(目标距离) < 0.0001 or 目标角度 < 0.001:
+            if abs(目标距离) < 0.00001 or 目标角度 < 0.0001:
                 if abs(目标距离) > 0.001:
                     raise Exception('超出范围!',目标距离)
 
@@ -522,7 +523,6 @@ class Robot():
         关节角度 = self.IK(目标位置-机械臂位置,翻滚,俯仰,偏航)
         print(关节角度)
 
-        from direct.showbase.ShowBaseGlobal import globalClock
         self.joint1_degrees(关节角度[1])
         self.joint2_degrees(关节角度[2])
         self.joint3_degrees(关节角度[3])

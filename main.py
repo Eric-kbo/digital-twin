@@ -94,8 +94,6 @@ package_np = model.find('**/Cube/+BulletRigidBodyNode')
 package_np.setPos(0.0200741, 0.26172, 0.521254)
 package_np.setHpr(0,0,180)
 package = package_np.node()
-package.set_mass(1)
-package.set_friction(1)
 bullet_world.attachRigidBody(package)
 
 packages = list()
@@ -112,8 +110,6 @@ def package(task):
     # package.apply_central_impulse(Vec3(0,0.001 * 0.051,0))
     # bullet_world.attachRigidBody(package)
 
-    # robot.pick(packages[0].getPos())
-    print(package_np.get_pos())
     return task.again
 
 base.task_mgr.do_method_later(1,package, 'package')
@@ -134,7 +130,7 @@ base.accept('7',lambda: robot.joint7_degrees(robot.joint7.get_hinge_angle() + -5
 base.accept('u',lambda: robot.joint7_degrees(robot.joint7.get_hinge_angle() + 5))
 base.accept('g',lambda: robot.joint_fingers(True))
 base.accept('b',lambda: robot.joint_fingers(False))
-base.accept('a',lambda: robot.move(Vec3(0.0200741, 0.26172, 0.521254)))
+base.accept('a',lambda: robot.move(package_np.get_pos()))
 
 
 
