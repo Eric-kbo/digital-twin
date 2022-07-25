@@ -25,7 +25,7 @@ class Robot():
 
         self.link1_np = link1_np = base.loader.loadModel('models/robot/meshes/collision/link1.bam').find('**/+BulletRigidBodyNode')
         link1_np.reparent_to(base.render)
-        link1_np.set_pos(0,0,0.145447)
+        link1_np.set_pos(0,0,0.332)
 
         link1 = link1_np.node()
         link1.remove_all_children()
@@ -38,7 +38,7 @@ class Robot():
         model.setDepthOffset(-1)
 
         pivotA = Point3(0, 0, 0.14)
-        pivotB = Point3(0, 0, -0.192006)
+        pivotB = Point3(0, 0, -0.192)
         axisA = Vec3(0, 0, 1)
         axisB = Vec3(0, 0, 1)
 
@@ -50,10 +50,10 @@ class Robot():
 
         self.link2_np = link2_np = base.loader.loadModel('models/robot/meshes/collision/link2.bam').find('**/+BulletRigidBodyNode')
         link2_np.reparent_to(base.render)
-        link2_np.setPos(0,0,0.332006)
+        link2_np.setPos(0,0,0.332)
 
         link2 = link2_np.node()
-        link2.removeAllChildren()    
+        link2.removeAllChildren()
         link2.setDeactivationEnabled(False)
         link2.setInertia(Vec3(0.1,0.1,0.1))
         bullet_world.attachRigidBody(link2)
@@ -70,12 +70,12 @@ class Robot():
         self.joint2 = hinge = BulletHingeConstraint(link1, link2, pivotA, pivotB, axisA, axisB, True)
         self.joint2_limit = (-105, 105)
         hinge.set_limit(0,0)
-        hinge.enableAngularMotor(True,-0.175,87)
+        hinge.enableAngularMotor(True,-2.175,87)
         bullet_world.attachConstraint(hinge)
 
         self.link3_np = link3_np = base.loader.loadModel('models/robot/meshes/collision/link3.bam').find('**/+BulletRigidBodyNode')
         link3_np.reparent_to(base.render)
-        link3_np.setPos(0,0,0.526006)
+        link3_np.setPos(0,0,0.647)
         
         link3 = link3_np.node()
         link3.removeAllChildren()
@@ -87,8 +87,8 @@ class Robot():
         model.reparentTo(link3_np)
         model.setDepthOffset(-1)
 
-        pivotA = Point3(0, -0.193, 0)
-        pivotB = Point3(0, 0, -0.117)
+        pivotA = Point3(0, -0.194, 0)
+        pivotB = Point3(0, 0, -0.121)
         axisA =  Vec3(0, -1, 0)
         axisB = Vec3(0, 0, 1)
 
@@ -100,7 +100,7 @@ class Robot():
 
         self.link4_np = link4_np = base.loader.loadModel('models/robot/meshes/collision/link4.bam').find('**/+BulletRigidBodyNode')
         link4_np.reparent_to(base.render)
-        link4_np.setPos(0,0,0.647024)
+        link4_np.setPos(0.082502,0,0.647)
 
         link4 = link4_np.node()
         link4.removeAllChildren()
@@ -112,7 +112,7 @@ class Robot():
         model.reparentTo(link4_np)
         model.setDepthOffset(-1)
         
-        pivotA = Point3(0.082726, 0, 0)
+        pivotA = Point3(0.082502, 0, 0)
         pivotB = Point3(0, 0, 0)
         axisA =  Vec3(0, -1, 0)
         axisB = Vec3(0, 0, 1)
@@ -125,7 +125,7 @@ class Robot():
 
         self.link5_np = link5_np = base.loader.loadModel('models/robot/meshes/collision/link5.bam').find('**/+BulletRigidBodyNode')
         link5_np.reparent_to(base.render)
-        link5_np.setPos(0,0,0.771025)
+        link5_np.setPos(0,0,1.03)
 
         link5 = link5_np.node()
         link5.removeAllChildren()
@@ -137,8 +137,8 @@ class Robot():
         model.reparentTo(link5_np)
         model.setDepthOffset(-1)
 
-        pivotA = Point3(-0.082726, 0.12417, 0)
-        pivotB = Point3(0, 0, -0.259416)
+        pivotA = Point3(-0.082502, 0.124, 0)
+        pivotB = Point3(0, 0, -0.259)
         axisA =  Vec3(0, 1, 0)
         axisB = Vec3(0, 0, 1)
 
@@ -150,7 +150,7 @@ class Robot():
 
         self.link6_np = link6_np = base.loader.loadModel('models/robot/meshes/collision/link6.bam').find('**/+BulletRigidBodyNode')
         link6_np.reparent_to(base.render)
-        link6_np.setPos(0,0,1.03002)
+        link6_np.setPos(0,0,1.03)
         
         link6 = link6_np.node()
         link6.removeAllChildren()
@@ -169,12 +169,12 @@ class Robot():
         self.joint6 = hinge = BulletHingeConstraint(link5, link6, pivotA, pivotB, axisA, axisB, True)
         self.joint6_limit = (-5, 220)
         hinge.set_limit(30,30)
-        hinge.enableAngularMotor(True,0.610,12)
+        hinge.enableAngularMotor(True,2.610,12)
         bullet_world.attachConstraint(hinge)
 
         link7_np = base.loader.loadModel('models/robot/meshes/collision/link7.bam').find('**/+BulletRigidBodyNode')
         link7_np.reparent_to(base.render)
-        link7_np.setPos(0.087827,0,1.03081)
+        link7_np.setPos(0.087827,0,1.03)
 
         link7 = link7_np.node()
         link7.removeAllChildren()
@@ -199,7 +199,7 @@ class Robot():
 
         self.hand_np = hand_np = base.loader.loadModel('models/robot/meshes/collision/hand.bam').find('**/+BulletRigidBodyNode')
         hand_np.reparent_to(base.render)
-        hand_np.setPos(0.087827,0,0.824836)
+        hand_np.setPos(0.087827,0,0.923)
 
         hand = hand_np.node()
         hand.removeAllChildren()
@@ -211,8 +211,8 @@ class Robot():
         model.reparentTo(hand_np)
         model.setDepthOffset(-1)
 
-        pivotA = Point3(0, 0, 0.051684)
-        pivotB = Point3(0, 0, -0.055576)
+        pivotA = Point3(0, 0, 0.107)
+        pivotB = Point3(0, 0, 0)
         axisA =  Vec3(0, 0, 1)
         axisB = Vec3(0, 0, 1)
 
@@ -222,8 +222,8 @@ class Robot():
        
         self.finger_left_np = finger_np = base.loader.loadModel('models/robot/meshes/collision/finger.bam').find('**/+BulletRigidBodyNode')
         finger_np.reparent_to(base.render)
-        finger_np.setPos(0.086827,0,0.5)
-        finger_np.setHpr(90,0,0)
+        finger_np.setPos(0.086827,0,0.820)
+        finger_np.setHpr(0,0,0)
 
         finger = finger_np.node()
         finger.removeAllChildren()
@@ -255,7 +255,7 @@ class Robot():
 
         self.finger_right_np = finger_np = base.loader.loadModel('models/robot/meshes/collision/finger.bam').find('**/+BulletRigidBodyNode')
         finger_np.reparent_to(base.render)
-        finger_np.setPos(0.087827,0,0.5)
+        finger_np.setPos(0.087827,0,0.820)
         
         finger = finger_np.node()
         finger.removeAllChildren()
@@ -287,47 +287,55 @@ class Robot():
 
         # target
         self.stuff_np = None
-        bodyB = BulletRigidBodyNode('target')
-        bodyB.add_shape(BulletSphereShape(0.001))
-        bodyB.set_mass(0.1)
-        self.target_np = target_np = base.render.attach_new_node(bodyB)
+        target = BulletRigidBodyNode('target')
+        target.add_shape(BulletSphereShape(0.001))
+        target.set_mass(0.1)
+        bullet_world.attach(target)
+
+        self.target_np = target_np = base.render.attach_new_node(target)
         target_np.set_collide_mask(BitMask32.all_off())
-        target_np.set_pos(-99, 0, 0)
-        bullet_world.attach(bodyB)
+        target_np.set_pos(0.087827, 0, 0.820)
 
         # Spherical Constraint
-        pivotA = Point3(0, 0, 0.105)
+        pivotA = Point3(0, 0, 0.103)
         pivotB = Point3(0, 0, 0)
-        bullet_world.attach_constraint(BulletSphericalConstraint(hand, bodyB, pivotA, pivotB))
+        bullet_world.attach_constraint(BulletSphericalConstraint(hand, target, pivotA, pivotB))
 
     def node_path(self):
         return self.link0_np
     def joint1_degrees(self,degrees):
-        volocity = 0.175 if degrees > self.joint1.get_hinge_angle() else -0.175
-        self.joint1.set_limit(low=degrees,high=degrees)
+        volocity = 2.175 if degrees > self.joint1.get_hinge_angle() else -2.175
+        self.joint1.set_limit(low=degrees,high=self.joint1.get_upper_limit())
         self.joint1.set_motor_target(volocity,1)
+        self.joint1.set_limit(low=degrees,high=degrees)
     def joint2_degrees(self,degrees):
-        volocity = 0.175 if degrees > self.joint2.get_hinge_angle() else -0.175
-        self.joint2.set_limit(low=degrees,high=degrees)
+        volocity = 2.175 if degrees > self.joint2.get_hinge_angle() else -2.175
+        self.joint2.set_limit(low=degrees,high=self.joint2.get_upper_limit())
         self.joint2.set_motor_target(volocity,1)
+        self.joint2.set_limit(low=degrees,high=degrees)
     def joint3_degrees(self,degrees):
-        volocity = 0.175 if degrees > self.joint3.get_hinge_angle() else -0.175
+        volocity = 2.175 if degrees > self.joint3.get_hinge_angle() else -2.175
+        self.joint3.set_limit(low=degrees,high=self.joint3.get_upper_limit())
         self.joint3.set_limit(low=degrees,high=degrees)
         self.joint3.set_motor_target(volocity,1)
     def joint4_degrees(self,degrees):
-        volocity = 0.175 if degrees > self.joint4.get_hinge_angle() else -0.175
+        volocity = 2.175 if degrees > self.joint4.get_hinge_angle() else -2.175
+        self.joint4.set_limit(low=degrees,high=self.joint4.get_upper_limit())
         self.joint4.set_limit(low=degrees,high=degrees)
         self.joint4.set_motor_target(volocity,1)
     def joint5_degrees(self,degrees):
-        volocity = 0.610 if degrees > self.joint5.get_hinge_angle() else -0.610 
+        volocity = 2.610 if degrees > self.joint5.get_hinge_angle() else -2.610 
+        self.joint5.set_limit(low=degrees,high=self.joint5.get_upper_limit())
         self.joint5.set_limit(low=degrees,high=degrees)
         self.joint5.set_motor_target(volocity,1)
     def joint6_degrees(self,degrees):
-        volocity = 0.610 if degrees > self.joint6.get_hinge_angle() else -0.610 
+        volocity = 2.610 if degrees > self.joint6.get_hinge_angle() else -2.610 
+        self.joint6.set_limit(low=degrees,high=self.joint6.get_upper_limit())
         self.joint6.set_limit(low=degrees,high=degrees)
         self.joint6.set_motor_target(volocity,1)
     def joint7_degrees(self,degrees):
-        volocity = 0.610 if degrees > self.joint7.get_hinge_angle() else -0.610 
+        volocity = 2.610 if degrees > self.joint7.get_hinge_angle() else -2.610 
+        self.joint7.set_limit(low=degrees,high=self.joint7.get_upper_limit())
         self.joint7.set_limit(low=degrees,high=degrees)
         self.joint7.set_motor_target(volocity,1)
 
@@ -348,7 +356,7 @@ class Robot():
             return task.again
             
         self.stuff_np = self.base.render.find_path_to(stuff)
-        pivotA = Point3(0, 0, 0.105) - (self.stuff_np.get_pos() - self.target_np.get_pos())
+        pivotA = Point3(0, 0, 0.103) - (self.stuff_np.get_pos() - self.target_np.get_pos())
         pivotB = Point3(0, 0, 0)
 
         axisA = -self.hand_np.get_quat().get_up()
@@ -378,15 +386,15 @@ class Robot():
         目标 = np.array(目标)
 
         原点 = Vec3(0,0,0)
-        关节0偏移 = Vec3(0,0,0.145447)
-        关节1偏移 = Vec3(0,0,0.205952)
-        关节2偏移 = Vec3(0,0,0.207689)
-        关节3偏移 = Vec3(0.138436,0,0.132895)
-        关节4偏移 = Vec3(-0.138436,0,0.132895)
-        关节5偏移 = Vec3(0,0,0.258891)
-        关节6偏移 = Vec3(0.088294,0,0)
-        关节7偏移 = Vec3(0,0,-0.107012)
-        抓手偏移 = Vec3(0,0,-0.107911)
+        关节0偏移 = Vec3(0,0,0.14) 
+        关节1偏移 = Vec3(0,0,0.192) # 0.332
+        关节2偏移 = Vec3(0,0,0.194) # 0.526
+        关节3偏移 = Vec3(0.082502,0,0.121) # 0.647
+        关节4偏移 = Vec3(-0.082502,0,0.124) # 0.771
+        关节5偏移 = Vec3(0,0,0.259) # 1.03
+        关节6偏移 = Vec3(0.087827,0,0) # 1.03
+        关节7偏移 = Vec3(0,0,-0.107) # 0.923
+        抓手偏移 = Vec3(0,0,-0.103) # 0.820
 
         关节0角度限制 = (0,0)
         关节1角度限制 = [-170,170]
@@ -501,9 +509,9 @@ class Robot():
                 # if 关节7角度 > 关节7角度限制[1]: 关节7角度 = 关节7角度限制[1]
             
             目标角度 = abs(水平角度1) + abs(垂直角度2) + abs(垂直角度4) + abs(俯仰角度) 
-            print(水平角度1,垂直角度2,垂直角度4,俯仰角度)
-            if abs(目标距离) < 0.01 or 目标角度 < 1:
-                if abs(目标距离) > 0.02:
+            print('目标角度',水平角度1,垂直角度2,垂直角度4,俯仰角度)
+            if abs(目标距离) < 0.0001 or 目标角度 < 0.001:
+                if abs(目标距离) > 0.001:
                     raise Exception('超出范围!',目标距离)
 
                 return [0,关节1角度,关节2角度,关节3角度,关节4角度,关节5角度,关节6角度,关节7角度]
@@ -514,6 +522,7 @@ class Robot():
         关节角度 = self.IK(目标位置-机械臂位置,翻滚,俯仰,偏航)
         print(关节角度)
 
+        from direct.showbase.ShowBaseGlobal import globalClock
         self.joint1_degrees(关节角度[1])
         self.joint2_degrees(关节角度[2])
         self.joint3_degrees(关节角度[3])
@@ -522,16 +531,4 @@ class Robot():
         self.joint6_degrees(关节角度[6])
         self.joint7_degrees(关节角度[7])
 
-        pass
-
-    def grasp(self,目标位置,翻滚,俯仰,偏航):
-        机械臂位置 = self.link0_np.get_pos()
-        关节角度 = self.IK(目标位置-机械臂位置,翻滚,俯仰,偏航)
-        self.joint1_degrees(关节角度[1])
-        self.joint2_degrees(关节角度[2])
-        self.joint3_degrees(关节角度[3])
-        self.joint4_degrees(关节角度[4])
-        self.joint5_degrees(关节角度[5])
-        self.joint6_degrees(关节角度[6])
-        self.joint7_degrees(关节角度[7])
         pass
